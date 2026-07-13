@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "TaskFlow"
+version = "1.0.0"
+id = "artifacts/taskflow"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 21998
+
+[services.development]
+run = "pnpm --filter @workspace/taskflow run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/taskflow", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/taskflow/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "21998"
+BASE_PATH = "/"

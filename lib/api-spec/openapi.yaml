@@ -1,0 +1,589 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: TaskFlow API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: workspaces
+    description: Workspace operations
+  - name: members
+    description: Workspace membership operations
+  - name: projects
+    description: Project operations
+  - name: tasks
+    description: Task operations
+  - name: insights
+    description: Dashboard summary and activity feed
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /workspaces:
+    get:
+      operationId: listWorkspaces
+      tags: [workspaces]
+      summary: List workspaces for the current user
+      responses:
+        "200":
+          description: List of workspaces
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Workspace"
+    post:
+      operationId: createWorkspace
+      tags: [workspaces]
+      summary: Create a workspace
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkspaceInput"
+      responses:
+        "201":
+          description: Created workspace
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workspace"
+
+  /workspaces/{workspaceId}:
+    get:
+      operationId: getWorkspace
+      tags: [workspaces]
+      summary: Get a workspace
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceId"
+      responses:
+        "200":
+          description: Workspace
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workspace"
+    patch:
+      operationId: updateWorkspace
+      tags: [workspaces]
+      summary: Update a workspace
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkspaceUpdate"
+      responses:
+        "200":
+          description: Updated workspace
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workspace"
+    delete:
+      operationId: deleteWorkspace
+      tags: [workspaces]
+      summary: Delete a workspace
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceId"
+      responses:
+        "204":
+          description: Deleted
+
+  /workspaces/{workspaceId}/members:
+    get:
+      operationId: listWorkspaceMembers
+      tags: [members]
+      summary: List members of a workspace
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceId"
+      responses:
+        "200":
+          description: List of members
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkspaceMember"
+    post:
+      operationId: inviteWorkspaceMember
+      tags: [members]
+      summary: Invite a member to a workspace by email
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkspaceMemberInput"
+      responses:
+        "201":
+          description: Created membership
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkspaceMember"
+
+  /workspaces/{workspaceId}/members/{memberId}:
+    delete:
+      operationId: removeWorkspaceMember
+      tags: [members]
+      summary: Remove a member from a workspace
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceId"
+        - $ref: "#/components/parameters/MemberId"
+      responses:
+        "204":
+          description: Removed
+
+  /workspaces/{workspaceId}/projects:
+    get:
+      operationId: listProjects
+      tags: [projects]
+      summary: List projects in a workspace
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceId"
+      responses:
+        "200":
+          description: List of projects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Project"
+    post:
+      operationId: createProject
+      tags: [projects]
+      summary: Create a project in a workspace
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectInput"
+      responses:
+        "201":
+          description: Created project
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+
+  /projects/{projectId}:
+    get:
+      operationId: getProject
+      tags: [projects]
+      summary: Get a project
+      parameters:
+        - $ref: "#/components/parameters/ProjectId"
+      responses:
+        "200":
+          description: Project
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+    patch:
+      operationId: updateProject
+      tags: [projects]
+      summary: Update a project
+      parameters:
+        - $ref: "#/components/parameters/ProjectId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectUpdate"
+      responses:
+        "200":
+          description: Updated project
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+    delete:
+      operationId: deleteProject
+      tags: [projects]
+      summary: Delete a project
+      parameters:
+        - $ref: "#/components/parameters/ProjectId"
+      responses:
+        "204":
+          description: Deleted
+
+  /workspaces/{workspaceId}/tasks:
+    get:
+      operationId: listWorkspaceTasks
+      tags: [tasks]
+      summary: List tasks across a workspace, with optional filters
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceId"
+        - name: projectId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/TaskStatus"
+        - name: priority
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/TaskPriority"
+        - name: assigneeId
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Task"
+
+  /tasks:
+    post:
+      operationId: createTask
+      tags: [tasks]
+      summary: Create a task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskInput"
+      responses:
+        "201":
+          description: Created task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+
+  /tasks/{taskId}:
+    get:
+      operationId: getTask
+      tags: [tasks]
+      summary: Get a task
+      parameters:
+        - $ref: "#/components/parameters/TaskId"
+      responses:
+        "200":
+          description: Task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+    patch:
+      operationId: updateTask
+      tags: [tasks]
+      summary: Update a task
+      parameters:
+        - $ref: "#/components/parameters/TaskId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskUpdate"
+      responses:
+        "200":
+          description: Updated task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+    delete:
+      operationId: deleteTask
+      tags: [tasks]
+      summary: Delete a task
+      parameters:
+        - $ref: "#/components/parameters/TaskId"
+      responses:
+        "204":
+          description: Deleted
+
+  /workspaces/{workspaceId}/summary:
+    get:
+      operationId: getWorkspaceSummary
+      tags: [insights]
+      summary: Get dashboard summary stats for a workspace
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceId"
+      responses:
+        "200":
+          description: Summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkspaceSummary"
+
+  /workspaces/{workspaceId}/activity:
+    get:
+      operationId: getWorkspaceActivity
+      tags: [insights]
+      summary: Get recent activity feed for a workspace
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceId"
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Recent activity items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
+components:
+  parameters:
+    WorkspaceId:
+      name: workspaceId
+      in: path
+      required: true
+      schema:
+        type: integer
+    MemberId:
+      name: memberId
+      in: path
+      required: true
+      schema:
+        type: integer
+    ProjectId:
+      name: projectId
+      in: path
+      required: true
+      schema:
+        type: integer
+    TaskId:
+      name: taskId
+      in: path
+      required: true
+      schema:
+        type: integer
+
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    WorkspaceType:
+      type: string
+      enum: [personal, team]
+
+    WorkspaceRole:
+      type: string
+      enum: [owner, admin, member]
+
+    MemberStatus:
+      type: string
+      enum: [active, pending]
+
+    TaskStatus:
+      type: string
+      enum: [todo, in_progress, done]
+
+    TaskPriority:
+      type: string
+      enum: [low, medium, high, urgent]
+
+    ActivityType:
+      type: string
+      enum: [task_created, task_completed, task_updated, task_deleted, project_created]
+
+    Workspace:
+      type: object
+      required: [id, name, type, role, memberCount, projectCount, taskCount, createdAt]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        type: { $ref: "#/components/schemas/WorkspaceType" }
+        role: { $ref: "#/components/schemas/WorkspaceRole" }
+        memberCount: { type: integer }
+        projectCount: { type: integer }
+        taskCount: { type: integer }
+        createdAt: { type: string, format: date-time }
+
+    WorkspaceInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1 }
+        type: { $ref: "#/components/schemas/WorkspaceType" }
+
+    WorkspaceUpdate:
+      type: object
+      properties:
+        name: { type: string, minLength: 1 }
+
+    WorkspaceMember:
+      type: object
+      required: [id, workspaceId, email, userId, role, status, createdAt]
+      properties:
+        id: { type: integer }
+        workspaceId: { type: integer }
+        email: { type: string }
+        userId: { type: ["string", "null"] }
+        role: { $ref: "#/components/schemas/WorkspaceRole" }
+        status: { $ref: "#/components/schemas/MemberStatus" }
+        createdAt: { type: string, format: date-time }
+
+    WorkspaceMemberInput:
+      type: object
+      required: [email]
+      properties:
+        email: { type: string, minLength: 3 }
+        role:
+          type: string
+          enum: [admin, member]
+
+    Project:
+      type: object
+      required: [id, workspaceId, name, description, color, taskCount, doneCount, createdAt]
+      properties:
+        id: { type: integer }
+        workspaceId: { type: integer }
+        name: { type: string }
+        description: { type: ["string", "null"] }
+        color: { type: string }
+        taskCount: { type: integer }
+        doneCount: { type: integer }
+        createdAt: { type: string, format: date-time }
+
+    ProjectInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1 }
+        description: { type: string }
+        color: { type: string }
+
+    ProjectUpdate:
+      type: object
+      properties:
+        name: { type: string, minLength: 1 }
+        description: { type: ["string", "null"] }
+        color: { type: string }
+
+    Task:
+      type: object
+      required: [id, projectId, projectName, workspaceId, title, description, status, priority, dueDate, assigneeId, createdAt, updatedAt]
+      properties:
+        id: { type: integer }
+        projectId: { type: integer }
+        projectName: { type: string }
+        workspaceId: { type: integer }
+        title: { type: string }
+        description: { type: ["string", "null"] }
+        status: { $ref: "#/components/schemas/TaskStatus" }
+        priority: { $ref: "#/components/schemas/TaskPriority" }
+        dueDate: { type: ["string", "null"], format: date }
+        assigneeId: { type: ["string", "null"] }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    TaskInput:
+      type: object
+      required: [projectId, title]
+      properties:
+        projectId: { type: integer }
+        title: { type: string, minLength: 1 }
+        description: { type: string }
+        status: { $ref: "#/components/schemas/TaskStatus" }
+        priority: { $ref: "#/components/schemas/TaskPriority" }
+        dueDate: { type: ["string", "null"], format: date }
+        assigneeId: { type: ["string", "null"] }
+
+    TaskUpdate:
+      type: object
+      properties:
+        projectId: { type: integer }
+        title: { type: string, minLength: 1 }
+        description: { type: ["string", "null"] }
+        status: { $ref: "#/components/schemas/TaskStatus" }
+        priority: { $ref: "#/components/schemas/TaskPriority" }
+        dueDate: { type: ["string", "null"], format: date }
+        assigneeId: { type: ["string", "null"] }
+
+    ProjectBreakdownItem:
+      type: object
+      required: [projectId, projectName, color, taskCount, doneCount]
+      properties:
+        projectId: { type: integer }
+        projectName: { type: string }
+        color: { type: string }
+        taskCount: { type: integer }
+        doneCount: { type: integer }
+
+    WorkspaceSummary:
+      type: object
+      required: [totalTasks, todoCount, inProgressCount, doneCount, overdueCount, dueSoonCount, memberCount, projectBreakdown]
+      properties:
+        totalTasks: { type: integer }
+        todoCount: { type: integer }
+        inProgressCount: { type: integer }
+        doneCount: { type: integer }
+        overdueCount: { type: integer }
+        dueSoonCount: { type: integer }
+        memberCount: { type: integer }
+        projectBreakdown:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProjectBreakdownItem"
+
+    ActivityItem:
+      type: object
+      required: [id, workspaceId, type, title, taskId, projectId, projectName, actorId, createdAt]
+      properties:
+        id: { type: integer }
+        workspaceId: { type: integer }
+        type: { $ref: "#/components/schemas/ActivityType" }
+        title: { type: string }
+        taskId: { type: ["integer", "null"] }
+        projectId: { type: ["integer", "null"] }
+        projectName: { type: ["string", "null"] }
+        actorId: { type: ["string", "null"] }
+        createdAt: { type: string, format: date-time }

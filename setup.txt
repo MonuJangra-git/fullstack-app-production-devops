@@ -1,0 +1,129 @@
+TaskFlow — Setup & Operations Guide
+====================================
+
+OVERVIEW
+--------
+TaskFlow is a SaaS task-management product supporting both team workspaces
+and personal task tracking. It is built in a pnpm monorepo with three
+artifacts:
+
+  artifacts/taskflow       React + Vite frontend (dark, futuristic UI)
+  artifacts/api-server     Express API server (REST, OpenAPI-first)
+  artifacts/mockup-sandbox Canvas component-preview sandbox (dev tool only)
+
+Shared libraries:
+  lib/db        Drizzle ORM schema + Postgres client
+  lib/api-spec  OpenAPI spec, source of truth for the API contract
+  lib/api-zod   Generated zod schemas + types (via orval, from api-spec)
+
+ARCHITECTURE
+------------
+- Auth: Replit-managed Clerk (email/password + OAuth). Clerk is the sole
+  identity source of truth — there is no local `users` table. The API
+  server verifies Clerk sessions via @clerk/express middleware; the
+  frontend uses @clerk/react.
+- Data model (Postgres via Drizzle, lib/db/src/schema):
+    workspaces          — a team or personal workspace
+    workspace_members    — membership + role (owner/admin/member), supports
+                            pending invites matched by email on next login
+    projects              — belongs to a workspace
+    tasks                 — belongs to a project, has status/priority/dueDate
+    activity_log          — audit trail of task/project/member changes
+  Counts (member/project/task totals, done counts, etc.) are computed at
+  query time server-side, not stored as denormalized columns.
+- New users are auto-bootstrapped a personal workspace + starter project
+  the first time they have zero active workspace memberships.
+- API contract: lib/api-spec/openapi.yaml defines every route; orval
+  generates zod validators + TS types into lib/api-zod. The frontend
+  consumes generated React Query hooks; the API server validates
+  request/response bodies against the same generated zod schemas.
+
+ENVIRONMENT VARIABLES & SECRETS
+--------------------------------
+Managed by Replit (do not hand-edit .env files — use the Secrets pane):
+  CLERK_PUBLISHABLE_KEY       Clerk backend/shared publishable key
+  CLERK_SECRET_KEY            Clerk backend secret key (server-side only)
+  VITE_CLERK_PUBLISHABLE_KEY  Same publishable key, exposed to the Vite build
+  SESSION_SECRET              Session signing secret (server-side only)
+  DATABASE_URL                Replit-managed Postgres connection string
+                               (provisioned automatically; visible via the
+                               Database pane, not meant to be edited by hand)
+
+Never print or commit secret values. Rotate via the Replit Secrets pane if
+a key is ever exposed.
+
+RUNNING THE APP (DEVELOPMENT)
+------------------------------
+Each artifact runs as its own Replit workflow (auto-started in the
+workspace; restart via the Workflows pane or `pnpm --filter` command
+directly if working from a shell):
+
+  pnpm --filter @workspace/taskflow run dev      # frontend, port from PORT env
+  pnpm --filter @workspace/api-server run dev    # API server, port from PORT env
+  pnpm --filter @workspace/mockup-sandbox run dev  # canvas preview (dev tool)
+
+The frontend is served at the root path "/" (previewPath = "/" in
+artifacts/taskflow/.replit-artifact/artifact.toml) and proxies API calls
+to the api-server artifact.
+
+DATABASE
+--------
+Schema lives in lib/db/src/schema/*.ts (Drizzle). After changing schema:
+
+  pnpm --filter @workspace/db run push          # push schema changes to DB
+  pnpm --filter @workspace/db run push-force     # force push (destructive; only
+                                                  # if `push` reports unresolved
+                                                  # data-loss warnings you've
+                                                  # reviewed and accept)
+
+API CONTRACT / CODEGEN
+-----------------------
+When you change lib/api-spec/openapi.yaml, regenerate the client types:
+
+  pnpm --filter @workspace/api-spec run codegen
+
+This runs, in order:
+  1. orval  — regenerates lib/api-zod/src/generated/* and rewrites
+     lib/api-zod/src/index.ts (this barrel file is NOT hand-editable; it is
+     overwritten every run)
+  2. fix-barrel.mjs — required post-processing step. Any OpenAPI operation
+     with both path params and query params makes orval emit two
+     conflicting `<Operation>Params` exports (one zod object, one plain
+     type). This script resolves the collision. Do not remove this step
+     from the codegen script.
+  3. typecheck:libs — verifies the generated code compiles
+
+Note: generated code imports the plain "zod" package (v3), not "zod/v4".
+Route files that use `z.infer<typeof X>` on generated schemas must also
+import `z` from "zod" to match, or type inference silently resolves to
+`unknown`.
+
+BUILD & TYPECHECK
+------------------
+  pnpm -w run typecheck:libs                                   # shared libs
+  pnpm --filter @workspace/api-server exec tsc --noEmit -p .   # API server
+  pnpm --filter @workspace/taskflow run build                  # frontend build
+  pnpm --filter @workspace/api-server run build                # API server build
+
+SECURITY NOTES
+--------------
+- All authenticated API routes require a valid Clerk session (requireAuth
+  middleware); userId is taken from the verified Clerk session, never from
+  client-supplied input.
+- Workspace-scoped routes additionally check the caller's membership role
+  (owner/admin/member) before allowing writes or invite/removal actions.
+- Secrets (Clerk keys, session secret, database URL) are stored via
+  Replit's managed secrets system, not committed to the repo.
+- Clerk is currently running with development keys (shown by an in-app
+  warning banner in dev). Before going to production, switch to Clerk
+  production keys via the Clerk/Replit integration settings.
+- Input validation on every API route is enforced via the generated zod
+  schemas from lib/api-zod — do not bypass them with untyped `req.body`
+  access.
+
+DEPLOYMENT
+----------
+Use Replit's Deploy/Publish flow (see the deployment skill) once ready.
+Each artifact's `.replit-artifact/artifact.toml` already defines its
+production build/serve commands (static frontend build, Node build for
+the API server).
