@@ -52,3 +52,9 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+node_modules/
+dist/
+.env
+.env.*
+artifacts/api-server/.env.production
+artifacts/taskflow/.env.production
