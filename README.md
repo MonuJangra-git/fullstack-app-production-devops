@@ -311,7 +311,7 @@ Note:- All Dockerfile and docker-compose files are provided in this project , us
 
 ## 🔑 Environment Variables for Docker (Very Important)
 
-`.env.docker` (never committed — add to `.gitignore`)
+`.env` (never committed — add to `.gitignore`)
 
 ```env
 # Database
