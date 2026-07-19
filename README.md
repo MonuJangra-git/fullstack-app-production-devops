@@ -123,7 +123,7 @@ sudo mkdir -p /opt/taskflow
 sudo chown "$USER":"$USER" /opt/taskflow
 cd /opt/taskflow
 
-git clone <repo-url> .
+git clone https://github.com/MonuJangra-git/taskflow-production-deployment.git
 pnpm install --frozen-lockfile
 ```
 
