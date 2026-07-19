@@ -3,6 +3,7 @@
 > A full-stack task management application, self-hosted and deployed from scratch —
 > first on a raw Linux VM, then containerized with Docker.
 > No managed platforms. No shortcuts. Real infrastructure.
+> Backup Option for data to s3
 
 This project demonstrates **two complete deployment approaches**:
 - **Phase 1** — Traditional Linux deployment (Nginx + systemd + PostgreSQL)
@@ -258,6 +259,99 @@ sudo tail -f /var/log/nginx/error.log
 ```
 
 ---
+
+---
+---
+
+## ☁️ Automated PostgreSQL Backups to AWS S3
+
+To ensure disaster recovery, database backups are exported from the Docker PostgreSQL container and uploaded to AWS S3 daily.
+
+> Docker volumes preserve local data, but S3 provides off‑server durability.
+
+### 🏗 Backup Flow
+
+```
+PostgreSQL (Docker Volume)
+        ↓
+pg_dump (inside container)
+        ↓
+gzip compression
+        ↓
+AWS S3 (encrypted + versioned)
+```
+
+---
+
+### 🔧 Setup
+
+#### 1️⃣ Install AWS CLI
+
+```bash
+sudo apt update && sudo apt install unzip -y
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o awscliv2.zip
+unzip awscliv2.zip && sudo ./aws/install
+```
+
+Verify:
+
+```bash
+aws --version
+```
+
+#### 2️⃣ Configure Access
+
+✅ Recommended: Attach an **IAM Role** to EC2 with:
+
+- `s3:PutObject`
+- `s3:ListBucket`
+
+Or manually configure:
+
+```bash
+aws configure
+```
+
+---
+
+### 📦 Backup Script
+
+```bash
+chmod +x /home/ubuntu/backup-to-s3.sh
+```
+
+---
+
+### ⏰ Automate (Daily 2 AM)
+
+```bash
+crontab -e
+```
+
+Add:
+
+```bash
+0 2 * * * /home/ubuntu/backup-to-s3.sh
+```
+
+---
+
+### 🔄 Restore from S3
+[Note:- Before using backup script use your own bucket name from S3.And at least run 1 time manually to test the script because there may be some issue due to AWS IAM permission on account or account not properly configured in linux  ]
+```bash
+aws s3 cp s3://taskflow-db-backups/backup.sql.gz .
+gunzip backup.sql.gz
+
+cat backup.sql \
+| docker exec -i $(docker compose ps -q db) \
+  psql -U taskflow -d taskflow
+```
+
+---
+
+✅ Off-site encrypted backups  
+✅ No local storage dependency  
+✅ Fully automated via cron  
 
 ---
 
@@ -612,7 +706,7 @@ All errors that I faced during deployment is in error-proofs folder and also I m
 * Dedicated non-privileged system user in Phase 1
 * Non-root user inside Docker containers in Phase 2
 * Docker internal network — containers isolated from host
-* Backup for linux deployment , set filesupload to  S3  in cronjobs,
+* Backup for linux deployment , set filesupload to  S3  in cronjobs.(Recommended method)
 * Backup for container deployment , mount a volume , even volume is deleted but data still safe.
 
 ---
