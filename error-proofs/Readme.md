@@ -37,7 +37,7 @@ These are actual terminal screenshots captured while deploying this project on a
 <br>
 <img width="970" height="586" alt="Screenshot 2026-07-13 235621" src="https://github.com/user-attachments/assets/d9696f03-0045-43ac-bcfc-27405885cf39" /></details>
 
-
+<details>
 <summary><strong>7. EACCES in node_modules/.vite-temp after accidental sudo pnpm</strong></summary>
 <br>
 <img src="https://github.com/user-attachments/assets/6b78ea4e-68e5-4884-97b4-96bc0a0f33d9" width="700">
