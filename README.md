@@ -612,6 +612,8 @@ All errors that I faced during deployment is in error-proofs folder and also I m
 * Dedicated non-privileged system user in Phase 1
 * Non-root user inside Docker containers in Phase 2
 * Docker internal network — containers isolated from host
+* Backup for linux deployment , set filesupload to  S3  in cronjobs,
+* Backup for container deployment , mount a volume , even volume is deleted but data still safe.
 
 ---
 
