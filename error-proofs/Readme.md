@@ -28,7 +28,8 @@ These are actual terminal screenshots captured while deploying this project on a
 <details>
 <summary><strong>5. Vite build failing due to missing PORT env var</strong></summary>
 <br>
-<img width="1536" height="748" alt="Screenshot 2026-07-13 235404" src="https://github.com/user-attachments/assets/44d09bdb-11f3-4885-ac92-640324aab172" /><details>
+<img width="1536" height="748" alt="Screenshot 2026-07-13 235404" src="..."/>
+</details>
 
   
 <details>
