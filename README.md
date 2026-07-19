@@ -315,6 +315,7 @@ aws configure
 ---
 
 ### 📦 Backup Script
+[Note:- Before using backup script use your own bucket name from S3.And at least run 1 time manually to test the script because there may be some issue due to AWS IAM permission on account or account not properly configured in linux  ]
 
 ```bash
 chmod +x /home/ubuntu/backup-to-s3.sh
@@ -337,7 +338,6 @@ Add:
 ---
 
 ### 🔄 Restore from S3
-[Note:- Before using backup script use your own bucket name from S3.And at least run 1 time manually to test the script because there may be some issue due to AWS IAM permission on account or account not properly configured in linux  ]
 ```bash
 aws s3 cp s3://taskflow-db-backups/backup.sql.gz .
 gunzip backup.sql.gz
