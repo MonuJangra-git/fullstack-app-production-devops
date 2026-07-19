@@ -719,12 +719,13 @@ All errors that I faced during deployment is in error-proofs folder and also I m
 * Docker multi-stage builds
 * Docker Compose orchestration
 * Container networking & service discovery
-* Production build pipelines (TypeScript monorepo)
 * Environment variable & secrets management
-* PostgreSQL setup & schema migration
+* PostgreSQL setup 
 * TLS/SSL automation (Let's Encrypt)
 * Real-world debugging (permissions, build order, env scope, networking)
 * AWS EC2 deployment
+* AWS S3 backup strategy
+* AWS IAM 
 * Infrastructure evolution (bare metal → containers)
 * Backup using S3 and volume in local machine or EC2 
 
