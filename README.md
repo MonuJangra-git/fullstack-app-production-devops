@@ -16,15 +16,18 @@ Both phases reflect real-world DevOps workflows used in production environments.
 
 | Landing Page |
 |---|
-| <img width="1485" height="731" alt="Screenshot 2026-07-14 001952" src="https://github.com/user-attachments/assets/fba6a321-9ee9-42bb-b722-efcba35425d8" /> |
+| <img width="1485" height="731" alt="Screenshot 2026-07-14 001952" src="https://github.com/user-attachments/assets/1d3311b2-0772-4243-a755-f259e755f8f6" />
+ |
 
 | Dashboard |
 |---|
-| <img width="1531" height="732" alt="Screenshot 2026-07-13 231811" src="https://github.com/user-attachments/assets/043e1144-542e-4565-b17f-27b77024569f" /> |
+| <img width="1531" height="732" alt="Screenshot 2026-07-13 231811" src="https://github.com/user-attachments/assets/a702389b-56d9-4a88-b19b-d49863296b66" />
+ |
 
 | Study Hub |
 |---|
-| <img width="1532" height="767" alt="Screenshot 2026-07-13 231843" src="https://github.com/user-attachments/assets/b7f9fa02-169c-4333-a862-5ad84a42ff37" /> |
+| <img width="1480" height="781" alt="Screenshot 2026-07-13 231538" src="https://github.com/user-attachments/assets/3baf9322-25a6-4b08-9a62-57846d642359" />
+|
 
 ---
 
@@ -52,7 +55,8 @@ rather than feature development.
 
 ### Phase 1 — Traditional Linux Deployment
 
-<img width="1248" height="832" alt="Architecture" src="https://github.com/user-attachments/assets/2253dbf1-aac8-4932-b187-8bf3ce201289" />
+<img width="1024" height="1305" alt="Copilot_20260719_141342" src="https://github.com/user-attachments/assets/5ff231b2-86b9-4dbb-8cf6-5bf6a92cf0c7" />
+
 
 **Key design decision:** The API server is never exposed directly to the internet.
 Nginx is the single public entry point — forwarding `/api/*` internally while
@@ -63,26 +67,7 @@ serving the built frontend as static files.
 ### Phase 2 — Docker Architecture
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                    Browser / Client                  │
-└─────────────────────┬───────────────────────────────┘
-                      │ HTTPS :443 / HTTP :80
-┌─────────────────────▼───────────────────────────────┐
-│              Nginx Container (Reverse Proxy)          │
-│   /api/*  ──────────────────────► API Container      │
-│   /*  ──► serves static frontend files               │
-└──────────────────────────────────────────────────────┘
-                      │
-          ┌───────────▼──────────┐
-          │    API Container     │
-          │  Node.js :8080       │
-          └───────────┬──────────┘
-                      │
-          ┌───────────▼──────────┐
-          │  PostgreSQL Container │
-          │  postgres:15          │
-          └──────────────────────┘
-
+<img width="1024" height="1166" alt="Copilot_20260719_141637" src="https://github.com/user-attachments/assets/99af2f49-2b1a-4168-9cb0-e31e18acaafd" />
 All containers communicate via Docker internal network
 Only Nginx is exposed to the outside world
 ```
@@ -215,37 +200,20 @@ WantedBy=multi-user.target
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl enable --now taskflow-api
-```
+```<img width="1024" height="1305" alt="Copilot_20260719_141342" src="https://github.com/user-attachments/assets/755103fe-2c5e-45cf-adee-201750126834" />
+
 
 ---
 
 ### 7. Nginx Reverse Proxy
 
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com;
 
-    root /opt/taskflow/artifacts/taskflow/dist/public;
-    index index.html;
-
-    location /api/ {
-        proxy_pass http://127.0.0.1:8080;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_buffering off;
-    }
-
-    location / {
-        try_files $uri /index.html;
-    }
-}
-```
 
 ```bash
+sudo apt install nginx
+sudo systemctl start nginx
+sudo systemctl enable nginx
+# below commands are commands that are used after changing nginx conf
 sudo nginx -t
 sudo systemctl reload nginx
 ```
@@ -317,12 +285,11 @@ sudo tail -f /var/log/nginx/error.log
 
 ```
 taskflow/
-├── Dockerfile.api          # API server image
-├── Dockerfile.frontend     # Frontend build image  
+├── artifacts/taskflow/Dockerfile.frontend     # Frontend build image  
 ├── docker-compose.yml      # Orchestrates all services
 ├── nginx/
-│   └── default.conf        # Nginx config for Docker
-├── .env.docker             # Docker environment variables
+│   └── nginx.conf        # Nginx config for Docker
+├── .env.docker             # Docker environment variables # change to .env and edit the env variables according to user 
 └── .dockerignore           # Files excluded from image
 ```
 
@@ -342,7 +309,7 @@ Note:- All Dockerfile and docker-compose files are provided in this project , us
 
 ---
 
-## 🔑 Environment Variables for Docker
+## 🔑 Environment Variables for Docker (Very Important)
 
 `.env.docker` (never committed — add to `.gitignore`)
 
