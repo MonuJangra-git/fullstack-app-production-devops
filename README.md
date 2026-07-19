@@ -11,26 +11,8 @@ This project demonstrates **two complete deployment approaches**:
 
 Both phases reflect real-world DevOps workflows used in production environments.
 
----
+##Website insights are available on website-proofs folder in a well documented manner.
 
-## 📸 Preview
-
-| Landing Page |
-|---|
-| <img width="1485" height="731" alt="Screenshot 2026-07-14 001952" src="https://github.com/user-attachments/assets/1d3311b2-0772-4243-a755-f259e755f8f6" />
- |
-
-| Dashboard |
-|---|
-| <img width="1531" height="732" alt="Screenshot 2026-07-13 231811" src="https://github.com/user-attachments/assets/a702389b-56d9-4a88-b19b-d49863296b66" />
- |
-
-| Study Hub |
-|---|
-| <img width="1480" height="781" alt="Screenshot 2026-07-13 231538" src="https://github.com/user-attachments/assets/3baf9322-25a6-4b08-9a62-57846d642359" />
-|
-
----
 
 ## 📌 Project Scope
 
