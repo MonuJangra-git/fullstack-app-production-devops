@@ -26,12 +26,54 @@ import { Button } from "@/components/ui/button";
 
 interface ShellProps {
   children: ReactNode;
+  guestMode?: boolean;
 }
 
-export default function Shell({ children }: ShellProps) {
+function ClerkAccountInfo() {
+  const { user } = useUser();
+
+  return (
+    <>
+      <UserButton
+        appearance={{
+          elements: {
+            userButtonAvatarBox: "w-8 h-8 border border-white/10",
+            userButtonPopoverCard: "bg-popover border border-white/10 glass-panel",
+          },
+        }}
+      />
+      <div className="flex flex-col truncate">
+        <span className="text-sm font-medium truncate">
+          {user?.fullName || user?.primaryEmailAddress?.emailAddress}
+        </span>
+        <span className="text-xs text-muted-foreground truncate">My Account</span>
+      </div>
+    </>
+  );
+}
+
+function GuestAccountInfo() {
+  return (
+    <>
+      <div
+        aria-hidden="true"
+        className="w-8 h-8 rounded-full border border-primary/20 bg-primary/10 text-primary flex items-center justify-center text-xs font-bold"
+      >
+        G
+      </div>
+      <div className="flex flex-col truncate">
+        <span className="text-sm font-medium truncate">Guest session</span>
+        <span className="text-xs text-muted-foreground truncate">
+          Browser-specific workspace
+        </span>
+      </div>
+    </>
+  );
+}
+
+export default function Shell({ children, guestMode = false }: ShellProps) {
   const [location] = useLocation();
   const params = useParams();
-  const { user } = useUser();
   const workspaceIdStr = params.workspaceId;
   const workspaceId = workspaceIdStr ? Number(workspaceIdStr) : null;
 
@@ -132,18 +174,7 @@ export default function Shell({ children }: ShellProps) {
         </div>
 
         <div className="p-4 border-t border-white/[0.05] flex items-center gap-3">
-          <UserButton 
-            appearance={{ 
-              elements: { 
-                userButtonAvatarBox: "w-8 h-8 border border-white/10",
-                userButtonPopoverCard: "bg-popover border border-white/10 glass-panel"
-              } 
-            }} 
-          />
-          <div className="flex flex-col truncate">
-            <span className="text-sm font-medium truncate">{user?.fullName || user?.primaryEmailAddress?.emailAddress}</span>
-            <span className="text-xs text-muted-foreground truncate">My Account</span>
-          </div>
+          {guestMode ? <GuestAccountInfo /> : <ClerkAccountInfo />}
         </div>
       </aside>
 

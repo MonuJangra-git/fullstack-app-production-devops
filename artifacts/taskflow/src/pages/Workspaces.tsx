@@ -25,7 +25,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 
-export default function Workspaces() {
+export default function Workspaces({ guestMode = false }: { guestMode?: boolean }) {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -68,16 +68,44 @@ export default function Workspaces() {
           <span className="font-bold text-lg">TaskFlow</span>
         </div>
         <div className="flex items-center gap-4">
-          <UserButton 
-            appearance={{ 
-              elements: { userButtonAvatarBox: "w-8 h-8 border border-white/10" } 
-            }} 
-          />
+          {guestMode ? (
+            <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary">
+              <span aria-hidden="true" className="h-2 w-2 rounded-full bg-primary" />
+              Guest session
+            </span>
+          ) : (
+            <UserButton
+              appearance={{
+                elements: { userButtonAvatarBox: "w-8 h-8 border border-white/10" },
+              }}
+            />
+          )}
         </div>
       </header>
 
       {/* Main */}
       <main className="flex-1 container mx-auto max-w-6xl px-6 py-12 z-10">
+        {guestMode && (
+          <section
+            role="status"
+            className="mb-8 flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/[0.06] p-4"
+          >
+            <div
+              aria-hidden="true"
+              className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-sm font-bold text-primary"
+            >
+              G
+            </div>
+            <div>
+              <p className="text-sm font-semibold">Guest mode is active</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Your data is isolated to this browser. Clearing its cookies or
+                switching devices starts a new guest workspace. Add Clerk keys
+                when you need sign-in and account-based access.
+              </p>
+            </div>
+          </section>
+        )}
         <div className="flex items-end justify-between mb-10">
           <div>
             <h1 className="text-3xl font-bold tracking-tight mb-2">Your Workspaces</h1>
