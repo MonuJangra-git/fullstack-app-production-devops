@@ -8,6 +8,8 @@ import { clerkClient } from "@clerk/express";
 export async function getUserPrimaryEmail(
   userId: string,
 ): Promise<string | null> {
+  if (userId.startsWith("guest_")) return null;
+
   const user = await clerkClient.users.getUser(userId);
   const primary = user.emailAddresses.find(
     (e) => e.id === user.primaryEmailAddressId,

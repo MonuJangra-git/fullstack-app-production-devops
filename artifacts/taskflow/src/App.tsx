@@ -19,10 +19,11 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 
 const queryClient = new QueryClient();
 
-const clerkPubKey = publishableKeyFromHost(
-  window.location.hostname,
-  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
-);
+const configuredClerkKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY?.trim();
+const clerkPubKey = configuredClerkKey
+  ? publishableKeyFromHost(window.location.hostname, configuredClerkKey) ??
+    configuredClerkKey
+  : undefined;
 
 const clerkProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL;
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -31,10 +32,6 @@ function stripBase(path: string): string {
   return basePath && path.startsWith(basePath)
     ? path.slice(basePath.length) || "/"
     : path;
-}
-
-if (!clerkPubKey) {
-  throw new Error("Missing VITE_CLERK_PUBLISHABLE_KEY in .env file");
 }
 
 const clerkAppearance = {
@@ -162,12 +159,68 @@ function ProtectedRoute({ component: Component, shell = true }: { component: Rea
   );
 }
 
-function ClerkProviderWithRoutes() {
+function GuestHomeRedirect() {
+  return <Redirect to="/workspaces" />;
+}
+
+function GuestProtectedRoute({
+  component: Component,
+}: {
+  component: React.ComponentType;
+}) {
+  return (
+    <Shell guestMode>
+      <Component />
+    </Shell>
+  );
+}
+
+function GuestWorkspaces() {
+  return <Workspaces guestMode />;
+}
+
+function GuestRoutes() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Switch>
+          <Route path="/" component={GuestHomeRedirect} />
+          <Route path="/sign-in/*?" component={GuestHomeRedirect} />
+          <Route path="/sign-up/*?" component={GuestHomeRedirect} />
+          <Route path="/workspaces" component={GuestWorkspaces} />
+          <Route path="/workspaces/:workspaceId">
+            {() => <GuestProtectedRoute component={WorkspaceDashboard} />}
+          </Route>
+          <Route path="/workspaces/:workspaceId/projects">
+            {() => <GuestProtectedRoute component={WorkspaceProjects} />}
+          </Route>
+          <Route path="/workspaces/:workspaceId/projects/:projectId">
+            {() => <GuestProtectedRoute component={ProjectBoard} />}
+          </Route>
+          <Route path="/workspaces/:workspaceId/members">
+            {() => <GuestProtectedRoute component={Members} />}
+          </Route>
+          <Route path="/workspaces/:workspaceId/study-hub">
+            {() => <GuestProtectedRoute component={StudyHub} />}
+          </Route>
+          <Route component={NotFound} />
+        </Switch>
+        <Toaster />
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+}
+
+function ClerkProviderWithRoutes({
+  publishableKey,
+}: {
+  publishableKey: string;
+}) {
   const [, setLocation] = useLocation();
 
   return (
     <ClerkProvider
-      publishableKey={clerkPubKey}
+      publishableKey={publishableKey}
       proxyUrl={clerkProxyUrl}
       appearance={clerkAppearance}
       signInUrl={`${basePath}/sign-in`}
@@ -222,7 +275,11 @@ function ClerkProviderWithRoutes() {
 function App() {
   return (
     <WouterRouter base={basePath}>
-      <ClerkProviderWithRoutes />
+      {clerkPubKey ? (
+        <ClerkProviderWithRoutes publishableKey={clerkPubKey} />
+      ) : (
+        <GuestRoutes />
+      )}
     </WouterRouter>
   );
 }
