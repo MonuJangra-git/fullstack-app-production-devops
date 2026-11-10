@@ -714,6 +714,15 @@ All errors that I faced during deployment is in error-proofs folder and also I m
 
 ---
 
+## 🔮 Future Updates
+
+The following capabilities are planned for future updates:
+
+- Monitoring and observability with Prometheus and Grafana
+- Automated CI/CD pipelines for testing, building, and deployment
+
+---
+
 ## 📬 Contact
 
 If you'd like to discuss this project, DevOps practices, or potential opportunities:
