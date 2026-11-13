@@ -74,6 +74,11 @@ onlyBuiltDependencies:
   - msw
   - unrs-resolver
 
+# CI installs must not stop for an interactive build-script approval prompt.
+# Keep the lockfile and dependency changes reviewed because this allows
+# dependency lifecycle scripts to run during installation.
+dangerouslyAllowAllBuilds: true
+
 overrides:
   # replit uses linux-x64 only, we can exclude all other platforms
   "esbuild>@esbuild/darwin-arm64": "-"
