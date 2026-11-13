@@ -1,0 +1,64 @@
+pipeline {
+    agent any
+    environment  {
+    DOTENV_CREDENTIALS_ID = 'dotenv' //name should be exact that we use in Jenikens CREDENTIALS
+    }
+    stages {
+        stage('Checkout'){
+            steps
+            {
+                git branch : 'main',
+                url:'https://github.com/MonuJangra-git/fullstack-app-production-devops.git'
+                }
+        }
+        stage('Load .env file'){
+            steps{
+                script{
+                    withCredentials([file(credentialsId: env.DOTENV_CREDENTIALS_ID, variable: 'DOTENV')]){
+
+                    sh '''
+                        cp "$DOTENV" ./.env
+                        chmod 600 ./.env
+                        echo ".env file copied successfully from Jenkins credentials to the workspace."
+                    '''
+
+                   
+                    }
+                }
+            }
+
+        }
+        stage('List files'){
+            steps{
+                sh 'ls -la'
+            }
+        }
+        stage('Starting the website') {
+            steps {
+                sh 'docker compose --env-file ./.env up -d --build '
+            }
+        
+        }
+        stage('database schema push'){
+            steps{
+                sh 'bash push-db-schema.sh'
+            }
+        }
+        stage('Restart the docker-compose'){
+            steps{
+                sh 'docker compose --env-file ./.env restart'
+            }
+        }
+        stage('delete the .env file'){
+            steps {
+                sh 'rm .env'
+            }
+        }
+        stage('CI/CD works properly'){
+            steps{
+                sh 'echo "Project pipeline works successfully done Enjoy the app  "'
+            }
+        }
+        
+    }
+}

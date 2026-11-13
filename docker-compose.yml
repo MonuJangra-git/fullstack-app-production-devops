@@ -41,7 +41,7 @@ services:
     depends_on:
       - api
     ports:
-      - "8080:80"
+      - "8082:80"
     networks:
       - app_network
 
