@@ -68,12 +68,6 @@ catalog:
 
 autoInstallPeers: false
 
-onlyBuiltDependencies:
-  - '@swc/core'
-  - esbuild
-  - msw
-  - unrs-resolver
-
 # CI installs must not stop for an interactive build-script approval prompt.
 # Keep the lockfile and dependency changes reviewed because this allows
 # dependency lifecycle scripts to run during installation.
