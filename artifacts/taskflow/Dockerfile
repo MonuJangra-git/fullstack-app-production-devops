@@ -1,6 +1,6 @@
 FROM node:22-bullseye AS builder
 WORKDIR /app
-RUN corepack enable
+RUN corepack enable && corepack prepare pnpm@10.12.4 --activate
 ENV BASE_PATH=/
 ENV PORT=3000
 COPY tsconfig.base.json ./

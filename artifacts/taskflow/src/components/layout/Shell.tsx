@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { Link, useLocation, useParams } from "wouter";
-import { UserButton, useUser } from "@clerk/react";
 import { useListWorkspaces } from "@workspace/api-client-react";
+import { useAuth } from "../../lib/auth";
 import { 
   LayoutDashboard, 
   ListTodo, 
@@ -26,52 +26,22 @@ import { Button } from "@/components/ui/button";
 
 interface ShellProps {
   children: ReactNode;
-  guestMode?: boolean;
 }
 
-function ClerkAccountInfo() {
-  const { user } = useUser();
-
+function AccountInfo() {
+  const { user, signOut } = useAuth();
   return (
     <>
-      <UserButton
-        appearance={{
-          elements: {
-            userButtonAvatarBox: "w-8 h-8 border border-white/10",
-            userButtonPopoverCard: "bg-popover border border-white/10 glass-panel",
-          },
-        }}
-      />
       <div className="flex flex-col truncate">
-        <span className="text-sm font-medium truncate">
-          {user?.fullName || user?.primaryEmailAddress?.emailAddress}
-        </span>
-        <span className="text-xs text-muted-foreground truncate">My Account</span>
+        <span className="text-sm font-medium truncate">{user?.name}</span>
+        <span className="text-xs text-muted-foreground truncate">{user?.email}</span>
       </div>
+      <Button variant="ghost" size="sm" onClick={() => void signOut()}>Sign out</Button>
     </>
   );
 }
 
-function GuestAccountInfo() {
-  return (
-    <>
-      <div
-        aria-hidden="true"
-        className="w-8 h-8 rounded-full border border-primary/20 bg-primary/10 text-primary flex items-center justify-center text-xs font-bold"
-      >
-        G
-      </div>
-      <div className="flex flex-col truncate">
-        <span className="text-sm font-medium truncate">Guest session</span>
-        <span className="text-xs text-muted-foreground truncate">
-          Browser-specific workspace
-        </span>
-      </div>
-    </>
-  );
-}
-
-export default function Shell({ children, guestMode = false }: ShellProps) {
+export default function Shell({ children }: ShellProps) {
   const [location] = useLocation();
   const params = useParams();
   const workspaceIdStr = params.workspaceId;
@@ -174,7 +144,7 @@ export default function Shell({ children, guestMode = false }: ShellProps) {
         </div>
 
         <div className="p-4 border-t border-white/[0.05] flex items-center gap-3">
-          {guestMode ? <GuestAccountInfo /> : <ClerkAccountInfo />}
+          <AccountInfo />
         </div>
       </aside>
 

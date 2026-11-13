@@ -20,7 +20,7 @@ import {
 } from "@workspace/api-zod";
 import { requireAuth, type AuthedRequest } from "../../middlewares/requireAuth";
 import { getMembershipRole } from "../../lib/workspaceAccess";
-import { getUserPrimaryEmail } from "../../lib/clerkUsers";
+import { getUserPrimaryEmail } from "../../lib/authUsers";
 import membersRouter from "./members";
 
 type WorkspaceItem = z.infer<typeof ListWorkspacesResponseItem>;

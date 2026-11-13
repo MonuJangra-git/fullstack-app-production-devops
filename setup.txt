@@ -18,10 +18,10 @@ Shared libraries:
 
 ARCHITECTURE
 ------------
-- Auth: Replit-managed Clerk (email/password + OAuth). Clerk is the sole
-  identity source of truth — there is no local `users` table. The API
-  server verifies Clerk sessions via @clerk/express middleware; the
-  frontend uses @clerk/react.
+- Auth: Better Auth (email/password) backed by PostgreSQL. Better Auth owns
+  users, sessions, accounts, and verification records in the auth tables.
+  The API server verifies the Better Auth session cookie on protected routes;
+  the frontend uses the Better Auth HTTP endpoints through its auth context.
 - Data model (Postgres via Drizzle, lib/db/src/schema):
     workspaces          — a team or personal workspace
     workspace_members    — membership + role (owner/admin/member), supports
@@ -41,10 +41,10 @@ ARCHITECTURE
 ENVIRONMENT VARIABLES & SECRETS
 --------------------------------
 Managed by Replit (do not hand-edit .env files — use the Secrets pane):
-  CLERK_PUBLISHABLE_KEY       Clerk backend/shared publishable key
-  CLERK_SECRET_KEY            Clerk backend secret key (server-side only)
-  VITE_CLERK_PUBLISHABLE_KEY  Same publishable key, exposed to the Vite build
-  SESSION_SECRET              Session signing secret (server-side only)
+  BETTER_AUTH_SECRET          At least 32 random bytes (server-side only)
+  BETTER_AUTH_URL             Public API URL used by Better Auth
+  APP_URL                     Public frontend URL used in invitation links
+  CORS_ALLOWED_ORIGINS        Comma-separated allowed browser origins
   DATABASE_URL                Replit-managed Postgres connection string
                                (provisioned automatically; visible via the
                                Database pane, not meant to be edited by hand)

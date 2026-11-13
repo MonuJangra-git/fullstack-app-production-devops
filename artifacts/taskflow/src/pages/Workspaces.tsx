@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useListWorkspaces, useCreateWorkspace, getListWorkspacesQueryKey } from "@workspace/api-client-react";
-import { UserButton } from "@clerk/react";
+import { useAuth } from "../lib/auth";
 import { motion } from "framer-motion";
 import { 
   Briefcase, 
@@ -25,10 +25,11 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 
-export default function Workspaces({ guestMode = false }: { guestMode?: boolean }) {
+export default function Workspaces() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user, signOut } = useAuth();
   const { data: workspaces, isLoading } = useListWorkspaces();
   const createWorkspace = useCreateWorkspace();
 
@@ -68,44 +69,13 @@ export default function Workspaces({ guestMode = false }: { guestMode?: boolean 
           <span className="font-bold text-lg">TaskFlow</span>
         </div>
         <div className="flex items-center gap-4">
-          {guestMode ? (
-            <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary">
-              <span aria-hidden="true" className="h-2 w-2 rounded-full bg-primary" />
-              Guest session
-            </span>
-          ) : (
-            <UserButton
-              appearance={{
-                elements: { userButtonAvatarBox: "w-8 h-8 border border-white/10" },
-              }}
-            />
-          )}
+          <span className="text-sm text-muted-foreground">{user?.email}</span>
+          <Button variant="ghost" size="sm" onClick={() => void signOut()}>Sign out</Button>
         </div>
       </header>
 
       {/* Main */}
       <main className="flex-1 container mx-auto max-w-6xl px-6 py-12 z-10">
-        {guestMode && (
-          <section
-            role="status"
-            className="mb-8 flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/[0.06] p-4"
-          >
-            <div
-              aria-hidden="true"
-              className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-sm font-bold text-primary"
-            >
-              G
-            </div>
-            <div>
-              <p className="text-sm font-semibold">Guest mode is active</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Your data is isolated to this browser. Clearing its cookies or
-                switching devices starts a new guest workspace. Add Clerk keys
-                when you need sign-in and account-based access.
-              </p>
-            </div>
-          </section>
-        )}
         <div className="flex items-end justify-between mb-10">
           <div>
             <h1 className="text-3xl font-bold tracking-tight mb-2">Your Workspaces</h1>

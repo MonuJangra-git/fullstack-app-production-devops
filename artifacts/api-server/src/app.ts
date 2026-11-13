@@ -1,41 +1,12 @@
 import express, { type Express, type Request } from "express";
 import cors from "cors";
-import cookieParser from "cookie-parser";
-import { randomBytes } from "node:crypto";
 import pinoHttp from "pino-http";
-import { clerkMiddleware } from "@clerk/express";
-import { publishableKeyFromHost } from "@clerk/shared/keys";
+import { toNodeHandler } from "better-auth/node";
 import router from "./routes";
 import { logger } from "./lib/logger";
-import { guestSessionMiddleware } from "./middlewares/guestSession";
-import {
-  CLERK_PROXY_PATH,
-  clerkProxyMiddleware,
-  getClerkProxyHost,
-} from "./middlewares/clerkProxyMiddleware";
+import { auth } from "./lib/auth";
 
 const app: Express = express();
-const clerkSecretKey = process.env.CLERK_SECRET_KEY?.trim();
-const clerkPublishableKey = process.env.CLERK_PUBLISHABLE_KEY?.trim();
-const clerkEnabled = Boolean(clerkSecretKey);
-const configuredSessionSecret = process.env.SESSION_SECRET?.trim();
-
-if (!clerkSecretKey && clerkPublishableKey) {
-  throw new Error(
-    "CLERK_PUBLISHABLE_KEY cannot be set without CLERK_SECRET_KEY. Unset both server-side keys to use guest mode.",
-  );
-}
-
-if (
-  !clerkEnabled &&
-  configuredSessionSecret &&
-  Buffer.byteLength(configuredSessionSecret) < 32
-) {
-  throw new Error("SESSION_SECRET must contain at least 32 bytes in guest mode.");
-}
-
-const sessionSecret =
-  configuredSessionSecret || randomBytes(32).toString("base64url");
 
 function normalizeOrigin(origin: string): string | undefined {
   try {
@@ -82,12 +53,6 @@ function hasRequestHostOrigin(origin: string, req: Request): boolean {
   }
 }
 
-if (!clerkEnabled && !configuredSessionSecret) {
-  logger.warn(
-    "SESSION_SECRET is not configured; guest sessions will be reset when the API process restarts.",
-  );
-}
-
 app.disable("x-powered-by");
 
 app.use(
@@ -120,10 +85,6 @@ app.use((_req, res, next) => {
   }
   next();
 });
-
-// The Clerk proxy streams raw bytes, so it must be mounted before the body
-// parsers below.
-app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
 
 app.use(
   cors({
@@ -161,28 +122,14 @@ app.use("/api", (req, res, next) => {
 
   res.status(403).json({ error: "Untrusted request origin" });
 });
-app.use(cookieParser(sessionSecret));
+// Better Auth reads and writes the request body and session cookies itself.
+// It must be mounted before Express body parsers.
+app.all("/api/auth/*splat", toNodeHandler(auth));
+
 app.use(express.json({ limit: "1mb" }));
 app.use(
   express.urlencoded({ extended: false, limit: "16kb", parameterLimit: 100 }),
 );
-
-if (clerkEnabled) {
-  // Resolve the publishable key from the incoming request host so the same
-  // server can serve multiple Clerk custom domains.
-  app.use(
-    clerkMiddleware((req) => ({
-      publishableKey: publishableKeyFromHost(
-        getClerkProxyHost(req) ?? "",
-        clerkPublishableKey,
-      ),
-    })),
-  );
-} else {
-  // Each browser gets its own signed identity; protected routes still run
-  // their normal ownership and membership checks.
-  app.use("/api", guestSessionMiddleware());
-}
 
 app.use("/api", router);
 

@@ -67,7 +67,7 @@ Only Nginx is exposed to the outside world
 | Reverse Proxy | Nginx |
 | Process Manager | systemd (Phase 1) / Docker (Phase 2) |
 | Containerization | Docker + Docker Compose |
-| Auth | Clerk |
+| Auth | Better Auth + Resend |
 | TLS | Let's Encrypt (Certbot) |
 | Package Manager | pnpm (monorepo) |
 | Cloud | AWS EC2 |
@@ -131,8 +131,10 @@ SQL
 NODE_ENV=production
 PORT=8080
 DATABASE_URL=postgresql://taskflow:password@localhost:5432/taskflow
-CLERK_SECRET_KEY=sk_live_xxxxx
-SESSION_SECRET=your_generated_secret
+BETTER_AUTH_SECRET=your_generated_32_byte_secret
+BETTER_AUTH_URL=http://localhost:3000
+APP_URL=http://localhost:8080
+CORS_ALLOWED_ORIGINS=http://localhost:8080
 ```
 
 **Frontend (build-time)** → `artifacts/taskflow/.env.production`
@@ -140,7 +142,6 @@ SESSION_SECRET=your_generated_secret
 ```env
 PORT=5173
 BASE_PATH=/
-VITE_CLERK_PUBLISHABLE_KEY=pk_live_xxxxx
 ```
 
 > ⚠️ Secrets are never committed. `.env*` is git-ignored.
@@ -394,11 +395,12 @@ Note:- All Dockerfile and docker-compose files are provided in this project , us
 DB_PASSWORD=your_strong_password_here
 
 # API
-CLERK_SECRET_KEY=sk_live_xxxxx
-SESSION_SECRET=your_generated_secret_here
+BETTER_AUTH_SECRET=your_generated_32_byte_secret
+BETTER_AUTH_URL=http://localhost:3000
+APP_URL=http://localhost:8080
+CORS_ALLOWED_ORIGINS=http://localhost:8080
 
 # Frontend (build-time)
-VITE_CLERK_PUBLISHABLE_KEY=pk_live_xxxxx
 ```
 
 ---
@@ -589,7 +591,6 @@ Error: PORT environment variable is required but was not provided.
 ```bash
 export PORT=5173
 export BASE_PATH=/
-export VITE_CLERK_PUBLISHABLE_KEY=pk_live_xxxxx
 
 pnpm --filter ./artifacts/taskflow run build
 ```

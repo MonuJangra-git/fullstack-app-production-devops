@@ -10,6 +10,7 @@ import {
 } from "@workspace/api-zod";
 import { requireAuth, type AuthedRequest } from "../../middlewares/requireAuth";
 import { getMembershipRole } from "../../lib/workspaceAccess";
+import { sendWorkspaceInvitationEmail } from "../../lib/auth";
 
 const router: IRouter = Router();
 router.use(requireAuth);
@@ -90,6 +91,7 @@ router.post(
       })
       .returning();
 
+    await sendWorkspaceInvitationEmail(email, params.data.workspaceId);
     res.status(201).json(member);
   },
 );

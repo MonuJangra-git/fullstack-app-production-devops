@@ -2,7 +2,7 @@
 FROM node:22-bullseye AS builder
 WORKDIR /app
 
-RUN corepack enable
+RUN corepack enable && corepack prepare pnpm@10.12.4 --activate
 
 COPY pnpm-workspace.yaml ./
 COPY package.json ./
